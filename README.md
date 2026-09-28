@@ -54,12 +54,12 @@ python -m pytest tests/ -q
 
 **In:** multi-tenant mock, synthetic lanes/signals/tickets, deterministic risk, what-if scenario, NL filter parser, ticket desk, approval gate, audit, pricing mock.
 
-**Not in (on purpose):** live AIS/news APIs, a trained time-series model, Stripe, LangGraph-for-show. Say that in interviews. The score is a transparent weighted model plus scenario shocks.
+**Not in (on purpose):** live AIS/news APIs, a trained time-series model, Stripe, LangGraph-for-show.  The score is a transparent weighted model plus scenario shocks.
 
 ---
 
 ## Talk track
 
-Aegis: isolate is gated. Ballast: reroute is gated. Consulting gets a week-one risk engagement in a console. InCommodities gets Taiwan / Hormuz overlays. Schwab gets the same control pattern as Aegis.
+Aegis: isolate is gated. Ballast: reroute is gated. 
 
 Portfolio system for Tracy Manning / TAM-DS.
