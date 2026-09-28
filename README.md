@@ -73,10 +73,3 @@ python -m pytest tests/ -q
 
 **Not in (on purpose):** live AIS/news APIs, a trained time-series model, Stripe, LangGraph-for-show. The score is a transparent weighted model plus scenario shocks.
 
----
-
-## Talk track
-
-Aegis: isolate is gated. Ballast: reroute is gated. Tenant and question must match. Consulting gets a week-one risk engagement in a console. InCommodities gets Hormuz / crude overlays.
-
-Portfolio system for Tracy Manning / TAM-DS.
