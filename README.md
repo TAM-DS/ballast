@@ -23,6 +23,24 @@ Default query:
 
 `Show me the top 5 risks to semiconductors from Taiwan in the next 30 days`
 
+Energy query:
+
+`Show me the top 5 risks to crude from the Gulf in the next 30 days`
+
+---
+
+## Demo (four beats)
+
+Two tenants. Each has a deny path and an ops-confirm path.
+
+![Energy — reroute simulated, bookings unchanged](docs/screenshots/01-energy-active-ops-confirms.png)
+
+![Energy — Hormuz shock, reroute DENIED](docs/screenshots/02-energy-hormuz-reroute-denied.png)
+
+![Semiconductors — Taiwan dual-source DENIED](docs/screenshots/03-semi-conductor-taiwan-denied.png)
+
+![Semiconductors — Taiwan reroute simulated](docs/screenshots/04-semi-conductors-taiwan-ops-confirm.png)
+
 ---
 
 ## Run
@@ -37,12 +55,11 @@ python app.py
 
 Open http://127.0.0.1:7860
 
-1. Tenant **Northwind Semiconductors**
-2. Leave the Taiwan query
-3. **Score lanes**
-4. Select **Reroute** or **Open dual-source RFQ** → **Run** → `DENIED`
-5. **Approve + execute** → `[SIMULATED] … Bookings and contracts unchanged until ops confirms.`
-6. Toggle **Typhoon overlay** or close `Kaohsiung` and score again
+1. Tenant **Northwind Semiconductors** with the Taiwan query, or **Cinder Point Trading** with the Gulf crude query.
+2. **Score lanes**.
+3. Select **Reroute** or **Open dual-source RFQ** → **Run** → `DENIED`.
+4. **Approve + execute** → `[SIMULATED] … Bookings and contracts unchanged until ops confirms.`
+5. Move delay / tariff / port-closed / typhoon and score again.
 
 ```bash
 python -m pytest tests/ -q
@@ -54,12 +71,12 @@ python -m pytest tests/ -q
 
 **In:** multi-tenant mock, synthetic lanes/signals/tickets, deterministic risk, what-if scenario, NL filter parser, ticket desk, approval gate, audit, pricing mock.
 
-**Not in (on purpose):** live AIS/news APIs, a trained time-series model, Stripe, LangGraph-for-show.  The score is a transparent weighted model plus scenario shocks.
+**Not in (on purpose):** live AIS/news APIs, a trained time-series model, Stripe, LangGraph-for-show. The score is a transparent weighted model plus scenario shocks.
 
 ---
 
 ## Talk track
 
-Aegis: isolate is gated. Ballast: reroute is gated. 
+Aegis: isolate is gated. Ballast: reroute is gated. Tenant and question must match. Consulting gets a week-one risk engagement in a console. InCommodities gets Hormuz / crude overlays.
 
 Portfolio system for Tracy Manning / TAM-DS.
