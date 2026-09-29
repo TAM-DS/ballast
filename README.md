@@ -21,7 +21,7 @@ Imagine two operations teams working through disruptions:
 
 A dashboard can flag both problems. The harder question is **what the organization should do next—and who is allowed to make that change**.
 
-BALLAST turns the relevant synthetic lanes and signals into ranked risk briefs. The operator can model additional delay, a tariff shock, a port closure, or a Taiwan typhoon overlay, then inspect proposed mitigations.
+BALLAST turns the relevant synthetic lanes and signals into ranked risk briefs. The operator can model additional delay, a tariff shock, a port closure, or a Taiwan typhoon overlay, then compare baseline and shocked risk scores for the displayed lanes before inspecting proposed mitigations.
 
 When the operator selects a disruptive mitigation such as **Reroute active POs** or **Open dual-source RFQ** and clicks **Run** without approval, the policy gate responds:
 
@@ -103,7 +103,7 @@ The UI exposes four what-if inputs:
 - A named port closure.
 - A Taiwan typhoon overlay.
 
-Re-running **Score lanes** applies the selected scenario to the seeded lane data. The outcome is a revised ranking and mitigation set—not an operational change.
+Re-running **Score lanes** applies the selected scenario to the seeded lane data. The control tower also uses the **same existing risk engine** to score those displayed lanes under an empty baseline scenario. It shows the baseline score, scenario score, actual score change, and newly displayed risk drivers side by side. Scores are capped at 99, so a lane already at the cap can show a zero increase despite additional shocks. This is a deterministic what-if comparison—not a forecast or an operational change.
 
 ### 3. Focused query parsing and tenant scoping
 
@@ -221,7 +221,7 @@ The tests in [`tests/test_risk_and_gate.py`](tests/test_risk_and_gate.py) exerci
 
 These are focused regression tests, **not** comprehensive production validation. In particular, they do not establish statistical scoring accuracy, access-control isolation, end-to-end third-party integration, or correct execution in a real logistics network.
 
-The demo also includes a **pricing mock** in the UI. It illustrates SaaS packaging; it does not establish live billing, paying customers, revenue, or market validation.
+The control tower intentionally focuses on operational decisions rather than pricing. Its scenario comparison uses synthetic data and illustrative scoring; it does not establish financial-loss prediction, realized savings, or market validation.
 
 ## Run it locally
 
@@ -241,10 +241,10 @@ Open the local URL printed by Gradio (typically **http://127.0.0.1:7860**).
 **Suggested five-minute walkthrough**
 
 1. Select **Northwind Semiconductors**, keep the default Taiwan semiconductor query, and click **Score lanes**.
-2. Inspect the ranked lanes, drivers, dollar-at-risk heuristic, recommended mitigations, and ticket actions.
+2. Inspect the baseline-versus-scenario comparison, ranked lanes, drivers, dollar-at-risk heuristic, recommended mitigations, and ticket actions.
 3. Select **Open dual-source RFQ** or **Reroute active POs**. Click **Run** to see the unapproved action denied.
 4. Select **Approve + execute** to see the simulated result. Alternatively, select **Deny** to take no action.
-5. Apply the typhoon overlay or additional delay and **Score lanes** again. Switch to **Cinder Point Trading** and use the Gulf crude query to explore the energy case.
+5. Apply the typhoon overlay or additional delay and **Score lanes** again. Compare each displayed lane's baseline and scenario scores and note any score cap before switching to **Cinder Point Trading** for the Gulf crude case.
 
 Run the included tests:
 
