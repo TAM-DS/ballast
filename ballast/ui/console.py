@@ -4,10 +4,20 @@ import re
 
 import gradio as gr
 
+from ballast.engine.risk import score_lane
 from ballast.runtime import Ballast
-from ballast.schema.models import Brief, Scenario
+from ballast.schema.models import Brief, RiskRow, Scenario
 
-CSS = ".ballast-header {letter-spacing: 0.04em;}"
+CSS = """
+.gradio-container { max-width: 1600px !important; }
+.ballast-header { border-radius: 14px; padding: 22px 26px;
+  border: 1px solid #3d6970; background: linear-gradient(120deg, #102c37, #20545a); }
+.ballast-header h1 { color: #ffffff !important; letter-spacing: .08em; margin-bottom: 5px; }
+.ballast-header p { color: #e2f2ef !important; margin-bottom: 4px; }
+.ballast-guide { border-left: 4px solid #d3a24d; border-radius: 8px;
+  padding: 10px 14px; background: rgba(55, 132, 130, .12); }
+.ballast-guide p { margin: 0; }
+"""
 
 
 def format_brief(b: Brief | None) -> str:
@@ -68,23 +78,74 @@ def heatmap_md(b: Brief | None) -> str:
     return "\n".join(lines)
 
 
+def scenario_comparison(b: Brief | None, baseline: dict[str, RiskRow]) -> str:
+    """Compare exactly the displayed scenario lanes against their engine-scored baseline."""
+    if not b or not b.rows:
+        return "_No matching lanes to compare. Adjust the tenant or query._"
+    shocks = []
+    sc = b.scenario
+    if sc.extra_delay_days:
+        shocks.append(f"+{sc.extra_delay_days:g} days delay")
+    if sc.tariff_shock:
+        shocks.append(f"{sc.tariff_shock:g}% tariff")
+    if sc.port_closed:
+        shocks.append(f"Port closure: {sc.port_closed}")
+    if sc.typhoon_taiwan:
+        shocks.append("Taiwan typhoon overlay")
+    title = ", ".join(shocks) if shocks else "No what-if shocks applied"
+    lines = [
+        f"### Baseline → scenario · {title}",
+        "The same deterministic risk engine scores each displayed lane twice: "
+        "once without shocks and once using the selected scenario.",
+        "",
+        "| Lane | Baseline | Scenario | Change | Newly displayed drivers |",
+        "| --- | ---: | ---: | ---: | --- |",
+    ]
+    for row in b.rows:
+        original = baseline.get(row.lane_id)
+        if original is None:
+            continue
+        change = row.score - original.score
+        delta = f"{change:+.1f}" if change else "0.0"
+        new_drivers = [d for d in row.drivers if d not in original.drivers]
+        drivers = "; ".join(new_drivers) or "No additional displayed drivers"
+        lines.append(
+            f"| {row.title} | {original.score:.1f} | {row.score:.1f} "
+            f"| {delta} | {drivers} |"
+        )
+    lines.append(
+        "\n*Scores are capped at 99. Only lanes matching the current query appear; "
+        "this is a scenario comparison, not a forecast or a realized financial outcome.*"
+    )
+    return "\n".join(lines)
+
+
 def build_ui() -> gr.Blocks:
     rt = Ballast()
-    state = {"brief": None}
+    # Gradio session state keeps each visitor's current decision brief separate.
 
     with gr.Blocks(title="Ballast") as demo:
         gr.Markdown(
             "# BALLAST\n"
-            "Governed supply-chain risk and scenario planner. "
-            "Scores are deterministic. Reroute and dual-source never execute without an approval gate. "
-            "Bookings stay untouched."
+            "**SUPPLY-CHAIN CONTROL TOWER**  ·  Synthetic scenarios · Human-controlled action\n\n"
+            "See which lanes need attention, compare an operational shock against baseline, "
+            "and review mitigations without changing bookings or contracts.",
+            elem_classes=["ballast-header"],
         )
+        gr.Markdown(
+            "**WORKFLOW**  01 · Choose a tenant and filter  →  "
+            "02 · Score lanes and compare scenarios  →  "
+            "03 · Review or explicitly approve a simulated mitigation.",
+            elem_classes=["ballast-guide"],
+        )
+        brief_state = gr.State(value=None)
         labels = rt.tenant_labels()
         with gr.Row():
             with gr.Column(scale=1):
-                tenant = gr.Dropdown(choices=labels, value=labels[0] if labels else None, label="Tenant")
+                gr.Markdown("### 01 · Scope and scenario")
+                tenant = gr.Dropdown(choices=labels, value=labels[0] if labels else None, label="Demo tenant")
                 query = gr.Textbox(
-                    label="Natural language",
+                    label="Lane filter · supported terms",
                     value="Show me the top 5 risks to semiconductors from Taiwan in the next 30 days",
                 )
                 delay = gr.Slider(0, 21, value=0, step=1, label="What-if extra delay (days)")
@@ -92,23 +153,41 @@ def build_ui() -> gr.Blocks:
                 port = gr.Textbox(label="What-if port closed", placeholder="Kaohsiung")
                 typhoon = gr.Checkbox(label="Typhoon overlay on Taiwan lanes")
                 score_btn = gr.Button("Score lanes", variant="primary")
-                audit = gr.Textbox(label="Audit tail", lines=10)
+                with gr.Accordion("Local audit trail · expand for decisions", open=False):
+                    audit = gr.Textbox(label="Recent audit events", lines=8, interactive=False)
             with gr.Column(scale=2):
-                heat = gr.Markdown()
-                brief_md = gr.Markdown()
+                gr.Markdown("### 02 · Risk and scenario impact")
+                comparison = gr.Markdown(
+                    "_Score lanes to compare the baseline with the selected scenario._"
+                )
+                with gr.Accordion("Ranked lanes · scores and illustrative exposure", open=True):
+                    heat = gr.Markdown()
+                with gr.Accordion("Detailed lane brief and action desk", open=False):
+                    brief_md = gr.Markdown()
             with gr.Column(scale=1):
-                meta = gr.Textbox(label="Lead lane", lines=8)
-                pick = gr.Dropdown(label="Mitigation", choices=[])
-                run_btn = gr.Button("Run")
-                approve_btn = gr.Button("Approve + execute", variant="primary")
-                deny_btn = gr.Button("Deny")
-                result = gr.Textbox(label="Sandbox result", lines=5)
-                gr.Markdown("### Pricing mock\nStarter $0 · Operator $2.4k/mo · Firm $9k/mo + scenario pack")
+                gr.Markdown("### 03 · Decision and controls")
+                meta = gr.Textbox(label="Lead lane · heuristic indicators", lines=7, interactive=False)
+                pick = gr.Dropdown(
+                    label="Proposed mitigation",
+                    choices=[],
+                    info="Read-only actions can run directly; disruptive proposals require approval.",
+                )
+                run_btn = gr.Button("Run without approval")
+                approve_btn = gr.Button("Approve + simulate", variant="primary")
+                deny_btn = gr.Button("Deny selected mitigation")
+                result = gr.Textbox(label="Execution decision · simulated outcome", lines=6, interactive=False)
+                gr.Markdown(
+                    "**Execution boundary:** approval permits a simulated request only. "
+                    "No booking, supplier, contract, or purchase order is changed."
+                )
 
         def do_score(label, q, d, t, p, ty):
             sc = Scenario(port_closed=p or "", extra_delay_days=d, tariff_shock=t, typhoon_taiwan=bool(ty))
             brief = rt.run(label, q, sc)
-            state["brief"] = brief
+            baselines = {
+                lane.lane_id: score_lane(lane, rt.store.signals(brief.tenant_id), Scenario())
+                for lane in rt.store.lanes(brief.tenant_id)
+            }
             lead = brief.rows[0] if brief.rows else None
             meta_txt = (
                 f"score: {lead.score}\nseverity: {lead.severity.value}\nusd_at_risk: {lead.usd_at_risk:,.0f}\n"
@@ -118,22 +197,36 @@ def build_ui() -> gr.Blocks:
             )
             choices = action_choices(brief)
             return (
+                scenario_comparison(brief, baselines),
                 heatmap_md(brief),
                 format_brief(brief),
                 meta_txt,
                 gr.update(choices=choices, value=choices[0] if choices else None),
                 "\n".join(rt.audit.tail()),
+                brief,
             )
 
-        def do_run(choice, approved):
-            brief = state.get("brief")
+        def do_run(choice, brief, approved):
             if not brief:
-                return "Score a tenant first."
-            return rt.execute(brief, action_id(choice), approved)
+                return "Score a tenant first.", "\n".join(rt.audit.tail()), brief
+            result = rt.execute(brief, action_id(choice), approved)
+            return result, "\n".join(rt.audit.tail()), brief
 
-        score_btn.click(do_score, [tenant, query, delay, tariff, port, typhoon], [heat, brief_md, meta, pick, audit])
-        run_btn.click(lambda c: do_run(c, False), [pick], result)
-        approve_btn.click(lambda c: do_run(c, True), [pick], result)
+        score_btn.click(
+            do_score,
+            [tenant, query, delay, tariff, port, typhoon],
+            [comparison, heat, brief_md, meta, pick, audit, brief_state],
+        )
+        run_btn.click(
+            lambda c, b: do_run(c, b, False),
+            [pick, brief_state],
+            [result, audit, brief_state],
+        )
+        approve_btn.click(
+            lambda c, b: do_run(c, b, True),
+            [pick, brief_state],
+            [result, audit, brief_state],
+        )
         deny_btn.click(lambda: "Operator denied. No booking change issued.", outputs=result)
 
     return demo
