@@ -124,7 +124,7 @@ def build_ui() -> gr.Blocks:
     rt = Ballast()
     # Gradio session state keeps each visitor's current decision brief separate.
 
-    with gr.Blocks(title="Ballast") as demo:
+    with gr.Blocks(title="Ballast", fill_width=True) as demo:
         gr.Markdown(
             "# BALLAST\n"
             "**SUPPLY-CHAIN CONTROL TOWER**  ·  Synthetic scenarios · Human-controlled action\n\n"
@@ -184,8 +184,9 @@ def build_ui() -> gr.Blocks:
         def do_score(label, q, d, t, p, ty):
             sc = Scenario(port_closed=p or "", extra_delay_days=d, tariff_shock=t, typhoon_taiwan=bool(ty))
             brief = rt.run(label, q, sc)
+            signals = rt.store.signals(brief.tenant_id)
             baselines = {
-                lane.lane_id: score_lane(lane, rt.store.signals(brief.tenant_id), Scenario())
+                lane.lane_id: score_lane(lane, signals, Scenario())
                 for lane in rt.store.lanes(brief.tenant_id)
             }
             lead = brief.rows[0] if brief.rows else None
