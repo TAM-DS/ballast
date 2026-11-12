@@ -10,9 +10,9 @@ from ballast.schema.models import Brief, Mitigation, Scenario
 
 
 class Ballast:
-    def __init__(self) -> None:
-        self.store = Store()
-        self.audit = Audit()
+    def __init__(self, store: Store | None = None, audit: Audit | None = None) -> None:
+        self.store = store if store is not None else Store()
+        self.audit = audit if audit is not None else Audit()
         seed(self.store)
 
     def tenant_labels(self) -> list[str]:
@@ -59,9 +59,9 @@ class Ballast:
             )
         else:
             result = f"[READ] {action.title} — synthetic intel attached to the lane."
+        self.audit.write("operator", "execute", {"action_id": action_id, "approved": approved})
         action.executed = True
         action.result = result
-        self.audit.write("operator", "execute", {"action_id": action_id, "approved": approved})
         return result
 
     @staticmethod
@@ -83,3 +83,4 @@ class Ballast:
             f"Filter={filt}, horizon={q.horizon_days}d, ${top.usd_at_risk:,.0f} at risk on the lead lane. "
             f"Disruptive mitigations stay behind an approval gate.{extra}"
         )
+

@@ -126,11 +126,9 @@ class Audit:
             "action": action,
             "detail": detail,
         }
-        try:
-            with self.path.open("a") as f:
-                f.write(json.dumps(rec) + "\n")
-        except OSError:
-            pass
+        # Do not report a successful action when its audit record could not be written.
+        with self.path.open("a", encoding="utf-8") as f:
+            f.write(json.dumps(rec) + "\n")
 
     def tail(self, n: int = 16) -> list[str]:
         if not self.path.exists():
@@ -147,3 +145,4 @@ class Audit:
             except Exception:
                 continue
         return out
+

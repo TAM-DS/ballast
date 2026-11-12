@@ -27,9 +27,9 @@ class Lane(BaseModel):
     origin_region: str
     destination: str
     commodity: str
-    annual_usd: float
-    delay_days: float = 0.0
-    concentration: float = 0.4
+    annual_usd: float = Field(ge=0, allow_inf_nan=False)
+    delay_days: float = Field(default=0.0, ge=0, allow_inf_nan=False)
+    concentration: float = Field(default=0.4, ge=0, le=1, allow_inf_nan=False)
     single_source: bool = False
 
 
@@ -79,8 +79,8 @@ class RiskRow(BaseModel):
 
 class Scenario(BaseModel):
     port_closed: str = ""
-    extra_delay_days: float = 0.0
-    tariff_shock: float = 0.0
+    extra_delay_days: float = Field(default=0.0, ge=0, allow_inf_nan=False)
+    tariff_shock: float = Field(default=0.0, ge=0, le=100, allow_inf_nan=False)
     typhoon_taiwan: bool = False
 
 
@@ -99,3 +99,4 @@ class Brief(BaseModel):
     rows: list[RiskRow]
     ticket_actions: list[dict[str, Any]] = Field(default_factory=list)
     narrative: str = ""
+

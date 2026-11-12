@@ -1,5 +1,23 @@
 # BALLAST | Governed Supply-Chain Risk & Scenario Planning
 
+[![Tests](https://github.com/TAM-DS/ballast/actions/workflows/ci.yml/badge.svg)](https://github.com/TAM-DS/ballast/actions/workflows/ci.yml)
+
+## Validation and review
+
+**November 12, 2026:** 21 tests passed locally on Python 3.12. CI runs the suite on Python 3.11, 3.12, and 3.13; use the badge/run link for current remote results.
+
+Approval-required actions; non-Boolean approval rejection; denied-action state; audit-write failure; tenant-scoped queries; invalid/nonfinite inputs; bounded stress scores; and reproducible demo exports.
+
+```bash
+python -m pip install -r requirements.txt pytest
+python -m pytest -q
+```
+
+Tenant filtering tests are not authenticated isolation. Approval is a demonstration Boolean; actions are simulated. The public walkthrough replays synthetic Python-generated fixtures, not a hosted Python service.
+
+**[Try the interactive BALLAST walkthrough](https://tam-ds.github.io/demo.html)** — no account or API key. Compare energy and semiconductor scenarios, then replay denied and approved simulation outcomes. Export the same results with `python scripts/export_demo.py demo-fixtures.json`.
+
+
 **See the disruption. Model the options. Keep operational decisions under human control.**
 
 BALLAST is a runnable, multi-tenant supply-chain risk prototype for operations leaders and the teams responding to disruption. It ranks synthetic shipping lanes using an explainable, deterministic scoring model, lets operators apply what-if shocks, connects lane risk to an action desk, and proposes mitigations **without silently changing bookings or contracts**.
@@ -259,3 +277,4 @@ python -m pytest tests/ -q
 In each domain, analysis can move quickly while disruptive authority remains explicit and constrained. The reusable idea is not a shared dashboard or an agent framework—it is the boundary between **what the system recommends, what a human authorizes, and what the execution layer can truthfully confirm**.
 
 **A higher risk score may justify attention. It does not authorize a booking change.**
+
