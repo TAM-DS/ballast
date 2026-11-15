@@ -2,6 +2,20 @@
 
 [![Tests](https://github.com/TAM-DS/ballast/actions/workflows/ci.yml/badge.svg)](https://github.com/TAM-DS/ballast/actions/workflows/ci.yml)
 
+**See the disruption. Model the options. Keep operational decisions under human control.**
+
+BALLAST is a runnable, multi-tenant supply-chain risk prototype for operations leaders and the teams responding to disruption. It ranks synthetic shipping lanes using an explainable, deterministic scoring model, lets operators apply what-if shocks, connects lane risk to an action desk, and proposes mitigations **without silently changing bookings or contracts**.
+
+> **A risk score is not a decision. A recommendation is not permission to reroute.**
+
+**▶ [Try the interactive BALLAST walkthrough](https://tam-ds.github.io/demo.html)** — live, no account or API key. Compare energy and semiconductor scenarios, then replay denied and approved simulation outcomes.
+
+[Explore the demo](#run-it-locally) · [See the control boundary](#the-decision-boundary) · [Inspect the architecture](#architecture)
+
+This is the operations-domain counterpart to [AEGIS Analyst](https://github.com/TAM-DS/aegis-analyst): a different business problem, but the same deliberate separation between analysis, authorization, and execution.
+
+---
+
 ## Validation and review
 
 **November 12, 2026:** 21 tests passed locally on Python 3.12. CI runs the suite on Python 3.11, 3.12, and 3.13; use the badge/run link for current remote results.
@@ -13,20 +27,7 @@ python -m pip install -r requirements.txt pytest
 python -m pytest -q
 ```
 
-Tenant filtering tests are not authenticated isolation. Approval is a demonstration Boolean; actions are simulated. The public walkthrough replays synthetic Python-generated fixtures, not a hosted Python service.
-
-**[Try the interactive BALLAST walkthrough](https://tam-ds.github.io/demo.html)** — no account or API key. Compare energy and semiconductor scenarios, then replay denied and approved simulation outcomes. Export the same results with `python scripts/export_demo.py demo-fixtures.json`.
-
-
-**See the disruption. Model the options. Keep operational decisions under human control.**
-
-BALLAST is a runnable, multi-tenant supply-chain risk prototype for operations leaders and the teams responding to disruption. It ranks synthetic shipping lanes using an explainable, deterministic scoring model, lets operators apply what-if shocks, connects lane risk to an action desk, and proposes mitigations **without silently changing bookings or contracts**.
-
-> **A risk score is not a decision. A recommendation is not permission to reroute.**
-
-[Explore the demo](#run-it-locally) · [See the control boundary](#the-decision-boundary) · [Inspect the architecture](#architecture)
-
-This is the operations-domain counterpart to [AEGIS Analyst](https://github.com/TAM-DS/aegis-analyst): a different business problem, but the same deliberate separation between analysis, authorization, and execution.
+Tenant filtering tests are not authenticated isolation. Approval is a demonstration Boolean; actions are simulated. The public walkthrough replays synthetic Python-generated fixtures, not a hosted Python service. Export the same results with `python scripts/export_demo.py demo-fixtures.json`.
 
 ---
 
